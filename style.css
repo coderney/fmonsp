@@ -145,6 +145,11 @@ body {
 .live-app     { background: linear-gradient(145deg, #ff2d55, #c9184a); }
 .kader-app    { background: linear-gradient(145deg, #5ac8fa, #007aff); }
 .finance-app  { background: linear-gradient(145deg, #ffd60a, #ff9500); }
+.stadium-app  { background: linear-gradient(145deg, #30d158, #25a244); }
+.schedule-app { background: linear-gradient(145deg, #64d2ff, #0071e3); }
+.press-app    { background: linear-gradient(145deg, #ff6b6b, #c0392b); }
+.calendar-app { background: linear-gradient(145deg, #ff453a, #ff2d55); }
+.camp-app     { background: linear-gradient(145deg, #a2845e, #6b4226); }
 
 /* ── Page dots ── */
 .page-dots {

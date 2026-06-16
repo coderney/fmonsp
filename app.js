@@ -77,6 +77,64 @@ const APPS = {
       <p>📊 Gehaltsetat: 780.000 €/Monat</p><br>
       <p>📈 Einnahmen: 2,1 Mio € (YTD)</p>` }
   },
+  stadium: {
+    label: 'Stadion', cls: 'stadium-app',
+    svg: '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M4 10h2v4H4zm14 0h2v4h-2z"/>',
+    dialog: { title: 'Stadionmanagement', html: `
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">Muster-Arena · 28.500 Plätze</div><div class="msg-preview">Auslastung letzte Heimspiele: 94 %</div></div>
+        <div class="msg-item"><div class="msg-sender">🔧 Renovierung Nordkurve</div><div class="msg-preview">Kosten: 1,2 Mio € · Fertig: Aug. 2026</div></div>
+        <div class="msg-item"><div class="msg-sender">📋 Nächstes Heimspiel</div><div class="msg-preview">Sa. 20.06. · Tickets: 18.200 / 28.500 verkauft</div></div>
+      </div>` }
+  },
+  schedule: {
+    label: 'Spielplan', cls: 'schedule-app',
+    svg: '<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>',
+    dialog: { title: 'Spielplan & Tabelle', html: `
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:10px">BUNDESLIGA · SPIELTAG 32</p>
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">Sa. 20.06. · 15:30 · Heimspiel</div><div class="msg-preview">FC Musterstadt vs. SV Gegner</div></div>
+        <div class="msg-item"><div class="msg-sender">Sa. 27.06. · 18:30 · Auswärts</div><div class="msg-preview">FC Rivale vs. FC Musterstadt</div></div>
+      </div>
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;margin:14px 0 8px">TABELLE · PLATZ 4</p>
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">1. FC Führend &nbsp;&nbsp;&nbsp;&nbsp; 31 Sp. · 68 Pkt.</div><div class="msg-preview"></div></div>
+        <div class="msg-item"><div class="msg-sender">4. FC Musterstadt · 31 Sp. · 54 Pkt.</div><div class="msg-preview"></div></div>
+      </div>` }
+  },
+  press: {
+    label: 'Presse', cls: 'press-app',
+    svg: '<path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zM6 16H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V6h2v2zm11 8H7v-2h10v2zm0-4H7v-2h10v2zm0-4H7V6h10v2z"/>',
+    dialog: { title: 'Presse', html: `
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">📰 Pressekonferenz – Do. 18.06.</div><div class="msg-preview">Fragen zur Aufstellung & Formkrise vorbereiten</div></div>
+        <div class="msg-item"><div class="msg-sender">Kicker Online</div><div class="msg-preview">„Musterstadt zeigt starke Reaktion nach Derby"</div></div>
+        <div class="msg-item"><div class="msg-sender">Sport1</div><div class="msg-preview">Interviewanfrage Hoffmann – bis Fr. bestätigen</div></div>
+      </div>` }
+  },
+  calendar: {
+    label: 'Kalender', cls: 'calendar-app',
+    svg: '<path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/>',
+    dialog: { title: 'Kalender', html: `
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;margin-bottom:10px">JUNI 2026</p>
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">Mo. 16.06. · Heute</div><div class="msg-preview">10:00 Taktiktraining · 14:00 Arzttermin Fischer</div></div>
+        <div class="msg-item"><div class="msg-sender">Di. 17.06.</div><div class="msg-preview">09:30 Videoanalyse · 11:00 Einzelgespräch Hoffmann</div></div>
+        <div class="msg-item"><div class="msg-sender">Do. 18.06.</div><div class="msg-preview">16:00 Pressekonferenz</div></div>
+        <div class="msg-item"><div class="msg-sender">Sa. 20.06.</div><div class="msg-preview">15:30 Heimspiel vs. SV Gegner</div></div>
+      </div>` }
+  },
+  camp: {
+    label: 'Trainingslager', cls: 'camp-app',
+    svg: '<path d="M13.5 5.5c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zM9.8 8.9L7 23h2.1l1.8-8 2.1 2v6h2v-7.5l-2.1-2 .6-3C14.8 12 16.8 13 19 13v-2c-1.9 0-3.5-1-4.3-2.4l-1-1.6c-.4-.6-1-1-1.7-1-.3 0-.5.1-.8.1L9 8.3c-1 .4-1.7 1.3-1.7 2.3 0 0 0 6.4.2 6.4H9.5L9.8 8.9z"/><path d="M3 6h7V4H3v2zm0 3h5V7H3v2zm0 3h4v-2H3v2z"/>',
+    dialog: { title: 'Trainingslager', html: `
+      <div class="msg-list">
+        <div class="msg-item"><div class="msg-sender">🏔 Sommer-Lager · Davos</div><div class="msg-preview">15.07. – 22.07.2026 · 24 Spieler · Kosten: 85.000 €</div></div>
+        <div class="msg-item"><div class="msg-sender">Testspiel 1 · 18.07.</div><div class="msg-preview">vs. FC Tessin · 16:00 Uhr</div></div>
+        <div class="msg-item"><div class="msg-sender">Testspiel 2 · 20.07.</div><div class="msg-preview">vs. SC Alpin · 15:00 Uhr</div></div>
+        <div class="msg-item"><div class="msg-sender">📋 Planung bestätigen</div><div class="msg-preview">Anmeldefrist Hotel: bis 25.06.2026</div></div>
+      </div>` }
+  },
 };
 
 // ── State ────────────────────────────────────────────────────────────────────
@@ -85,8 +143,8 @@ const COLS = 4;
 const SLOTS = 12; // 4 × 3
 
 let screenData = [
-  ['messages', 'email', 'training', 'transfer', 'sponsor', 'live', 'kader', 'finance', null, null, null, null],
-  [null, null, null, null, null, null, null, null, null, null, null, null],
+  ['messages', 'email', 'live', 'schedule', 'training', 'transfer', 'kader', 'sponsor', 'finance', 'press', 'calendar', 'stadium'],
+  ['camp', null, null, null, null, null, null, null, null, null, null, null],
 ];
 let dockData = [null, null, null, null];
 
