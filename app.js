@@ -375,51 +375,82 @@ function goTo(idx) {
   pageDots.forEach((d, i) => d.classList.toggle('active', i === currentScreen));
 }
 
-// swipe state: null | { id, x, y, ok }
-let swipe = null;
+// ── Touch swipe (iOS / Android) ──────────────────────────────────────────────
+// Native touch events are the only reliable way to swipe on iOS Safari.
+// state: null | { id, x, y, ok }
+let ts = null;
 
-// Pointer capture happens immediately on pointerdown so iOS never loses the event.
-// pointermove/pointerup stay on screensWrapper (events are redirected there by capture).
-screensWrapper.addEventListener('pointerdown', e => {
-  if (e.target.closest('.app-icon') || drag || swipe) return;
-  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, ok: false };
-  screensWrapper.setPointerCapture(e.pointerId);   // lock events to this element
+document.addEventListener('touchstart', e => {
+  if (e.target.closest('.app-icon') || ts) return;
+  const t = e.changedTouches[0];
+  ts = { id: t.identifier, x: t.clientX, y: t.clientY, ok: false };
   screensWrapper.style.transition = 'none';
 }, { passive: true });
 
-screensWrapper.addEventListener('pointermove', e => {
-  if (!swipe || e.pointerId !== swipe.id || drag) return;
-  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-  if (!swipe.ok) {
-    // Clear vertical gesture early → release capture so native scroll isn't blocked
+document.addEventListener('touchmove', e => {
+  if (!ts) return;
+  let touch = null;
+  for (const t of e.changedTouches) { if (t.identifier === ts.id) { touch = t; break; } }
+  if (!touch) return;
+  const dx = touch.clientX - ts.x, dy = touch.clientY - ts.y;
+  if (!ts.ok) {
     if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
-      screensWrapper.releasePointerCapture(e.pointerId);
-      swipe = null;
-      screensWrapper.style.transition = '';
-      return;
+      // Vertical gesture → cancel swipe, allow native scroll
+      ts = null; screensWrapper.style.transition = ''; return;
     }
-    if (Math.abs(dx) < 5) return;   // wait for clear horizontal intent
-    swipe.ok = true;
+    if (Math.abs(dx) < 5) return;
+    ts.ok = true;
   }
-  e.preventDefault();   // block browser back-swipe and scroll
-  screensWrapper.style.transform =
-    `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
-}, { passive: false });  // must be non-passive to call preventDefault
+  e.preventDefault(); // block iOS back-swipe + scroll once direction confirmed
+  screensWrapper.style.transform = `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
+}, { passive: false }); // must be non-passive to allow preventDefault
 
-screensWrapper.addEventListener('pointerup', e => {
-  if (!swipe || e.pointerId !== swipe.id) return;
+document.addEventListener('touchend', e => {
+  if (!ts) return;
+  let touch = null;
+  for (const t of e.changedTouches) { if (t.identifier === ts.id) { touch = t; break; } }
   screensWrapper.style.transition = '';
-  const dx = e.clientX - swipe.x, wasOk = swipe.ok;
-  swipe = null;
+  const dx = touch ? touch.clientX - ts.x : 0;
+  const wasOk = ts.ok;
+  ts = null;
   if (wasOk && Math.abs(dx) > 50) goTo(dx < 0 ? currentScreen + 1 : currentScreen - 1);
   else goTo(currentScreen);
+}, { passive: true });
+
+document.addEventListener('touchcancel', () => {
+  if (!ts) return;
+  ts = null; screensWrapper.style.transition = ''; goTo(currentScreen);
+}, { passive: true });
+
+// ── Mouse swipe (desktop) ─────────────────────────────────────────────────────
+let ms = null; // { x, y, ok }
+
+screensWrapper.addEventListener('mousedown', e => {
+  if (e.target.closest('.app-icon') || drag) return;
+  ms = { x: e.clientX, y: e.clientY, ok: false };
+  screensWrapper.style.transition = 'none';
 });
 
-screensWrapper.addEventListener('pointercancel', e => {
-  if (!swipe || e.pointerId !== swipe.id) return;
-  swipe = null;
+document.addEventListener('mousemove', e => {
+  if (!ms || drag) return;
+  const dx = e.clientX - ms.x, dy = e.clientY - ms.y;
+  if (!ms.ok) {
+    if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) > 8) {
+      ms = null; screensWrapper.style.transition = ''; return;
+    }
+    if (Math.abs(dx) < 5) return;
+    ms.ok = true;
+  }
+  screensWrapper.style.transform = `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
+});
+
+document.addEventListener('mouseup', e => {
+  if (!ms) return;
   screensWrapper.style.transition = '';
-  goTo(currentScreen);
+  const dx = e.clientX - ms.x, wasOk = ms.ok;
+  ms = null;
+  if (wasOk && Math.abs(dx) > 50) goTo(dx < 0 ? currentScreen + 1 : currentScreen - 1);
+  else goTo(currentScreen);
 });
 
 // ── Clock ────────────────────────────────────────────────────────────────────
