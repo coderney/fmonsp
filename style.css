@@ -41,15 +41,13 @@ body {
 }
 
 /*
-  In standalone/PWA mode the native iOS status bar overlays the top
-  (black-translucent). The safe-area-inset-top on .phone-screen already
-  pushes content below it. Hide our duplicate clock/icons so only the
-  native bar is visible.
+  In standalone/PWA mode (detected via JS → body.pwa-standalone) the native
+  iOS status bar overlays the top. safe-area-inset-top on .phone-screen
+  already pushes content below it — hide our duplicate clock/battery icons.
 */
-@media (display-mode: standalone) {
-  .status-bar { height: 8px; padding: 0; }
-  .status-time, .status-icons { display: none; }
-}
+body.pwa-standalone .status-bar { height: 8px; padding: 0; }
+body.pwa-standalone .status-time,
+body.pwa-standalone .status-icons { display: none; }
 
 .status-time {
   font-size: 15px;

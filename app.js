@@ -148,6 +148,13 @@ let screenData = [
 ];
 let dockData = [null, null, null, null];
 
+// ── Standalone / PWA detection (iOS: navigator.standalone) ──────────────────
+
+if (window.navigator.standalone === true ||
+    window.matchMedia('(display-mode: standalone)').matches) {
+  document.body.classList.add('pwa-standalone');
+}
+
 // ── DOM refs ─────────────────────────────────────────────────────────────────
 
 const screensWrapper = document.getElementById('screensWrapper');
@@ -304,9 +311,9 @@ function commitDrop(x, y) {
   renderAll();
 }
 
-// Global pointer events — handles both drag and swipe
+// Global pointer events — drag only (swipe is handled on screensWrapper via capture)
 document.addEventListener('pointermove', e => {
-  // Cancel touch hold if finger moved
+  // Cancel touch hold if finger moved too far
   if (holdTimer) {
     if (Math.abs(e.clientX - pStartX) > 8 || Math.abs(e.clientY - pStartY) > 8) {
       clearTimeout(holdTimer); holdTimer = null; tapInfo = null;
@@ -320,41 +327,17 @@ document.addEventListener('pointermove', e => {
     }
   }
   // Drag ghost + drop highlight
-  if (drag) {
-    moveGhost(e.clientX, e.clientY);
-    const target = dropTargetAt(e.clientX, e.clientY);
-    clearHighlight();
-    if (target) { target.classList.add('drag-over'); lastTarget = target; }
-  }
-  // Swipe
-  if (swipe && e.pointerId === swipe.id && !drag) {
-    const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
-    if (!swipe.ok) {
-      // Cancel if clearly vertical
-      if (Math.abs(dy) > Math.abs(dx) && (Math.abs(dy) > 6 || Math.abs(dx) > 6)) {
-        swipe = null; screensWrapper.style.transition = ''; return;
-      }
-      if (Math.abs(dx) < 5) return; // wait for clear horizontal intent
-      swipe.ok = true;
-      try { screensWrapper.setPointerCapture(e.pointerId); } catch (_) {}
-    }
-    e.preventDefault(); // block browser back-swipe and scroll
-    screensWrapper.style.transform =
-      `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
-  }
-}, { passive: false }); // must be non-passive to call preventDefault
+  if (!drag) return;
+  moveGhost(e.clientX, e.clientY);
+  const target = dropTargetAt(e.clientX, e.clientY);
+  clearHighlight();
+  if (target) { target.classList.add('drag-over'); lastTarget = target; }
+}, { passive: true });
 
 document.addEventListener('pointerup', e => {
   if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
   if (tapInfo) { openDialog(tapInfo.appId); tapInfo = null; return; }
-  if (drag) { commitDrop(e.clientX, e.clientY); return; }
-  if (swipe && e.pointerId === swipe.id) {
-    screensWrapper.style.transition = '';
-    const dx = e.clientX - swipe.x, wasOk = swipe.ok;
-    swipe = null;
-    if (wasOk && Math.abs(dx) > 50) goTo(dx < 0 ? currentScreen + 1 : currentScreen - 1);
-    else goTo(currentScreen);
-  }
+  if (drag) commitDrop(e.clientX, e.clientY);
 });
 
 document.addEventListener('pointercancel', () => {
@@ -395,12 +378,49 @@ function goTo(idx) {
 // swipe state: null | { id, x, y, ok }
 let swipe = null;
 
-// Only pointerdown lives on screensWrapper — move/up are on document
+// Pointer capture happens immediately on pointerdown so iOS never loses the event.
+// pointermove/pointerup stay on screensWrapper (events are redirected there by capture).
 screensWrapper.addEventListener('pointerdown', e => {
   if (e.target.closest('.app-icon') || drag || swipe) return;
   swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, ok: false };
+  screensWrapper.setPointerCapture(e.pointerId);   // lock events to this element
   screensWrapper.style.transition = 'none';
 }, { passive: true });
+
+screensWrapper.addEventListener('pointermove', e => {
+  if (!swipe || e.pointerId !== swipe.id || drag) return;
+  const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+  if (!swipe.ok) {
+    // Clear vertical gesture early → release capture so native scroll isn't blocked
+    if (Math.abs(dy) > 8 && Math.abs(dy) > Math.abs(dx)) {
+      screensWrapper.releasePointerCapture(e.pointerId);
+      swipe = null;
+      screensWrapper.style.transition = '';
+      return;
+    }
+    if (Math.abs(dx) < 5) return;   // wait for clear horizontal intent
+    swipe.ok = true;
+  }
+  e.preventDefault();   // block browser back-swipe and scroll
+  screensWrapper.style.transform =
+    `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
+}, { passive: false });  // must be non-passive to call preventDefault
+
+screensWrapper.addEventListener('pointerup', e => {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  screensWrapper.style.transition = '';
+  const dx = e.clientX - swipe.x, wasOk = swipe.ok;
+  swipe = null;
+  if (wasOk && Math.abs(dx) > 50) goTo(dx < 0 ? currentScreen + 1 : currentScreen - 1);
+  else goTo(currentScreen);
+});
+
+screensWrapper.addEventListener('pointercancel', e => {
+  if (!swipe || e.pointerId !== swipe.id) return;
+  swipe = null;
+  screensWrapper.style.transition = '';
+  goTo(currentScreen);
+});
 
 // ── Clock ────────────────────────────────────────────────────────────────────
 
