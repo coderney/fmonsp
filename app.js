@@ -304,7 +304,7 @@ function commitDrop(x, y) {
   renderAll();
 }
 
-// Global pointer events
+// Global pointer events — handles both drag and swipe
 document.addEventListener('pointermove', e => {
   // Cancel touch hold if finger moved
   if (holdTimer) {
@@ -312,30 +312,49 @@ document.addEventListener('pointermove', e => {
       clearTimeout(holdTimer); holdTimer = null; tapInfo = null;
     }
   }
-  // Mouse: start drag on first significant move
+  // Mouse: start drag on significant move
   if (tapInfo && e.pointerType !== 'touch') {
     if (Math.abs(e.clientX - pStartX) > 5 || Math.abs(e.clientY - pStartY) > 5) {
       const info = tapInfo; tapInfo = null;
       startDrag(info, e);
     }
   }
-  if (!drag) return;
-
-  moveGhost(e.clientX, e.clientY);
-
-  const target = dropTargetAt(e.clientX, e.clientY);
-  clearHighlight();
-  if (target) { target.classList.add('drag-over'); lastTarget = target; }
-}, { passive: true });
+  // Drag ghost + drop highlight
+  if (drag) {
+    moveGhost(e.clientX, e.clientY);
+    const target = dropTargetAt(e.clientX, e.clientY);
+    clearHighlight();
+    if (target) { target.classList.add('drag-over'); lastTarget = target; }
+  }
+  // Swipe
+  if (swipe && e.pointerId === swipe.id && !drag) {
+    const dx = e.clientX - swipe.x, dy = e.clientY - swipe.y;
+    if (!swipe.ok) {
+      // Cancel if clearly vertical
+      if (Math.abs(dy) > Math.abs(dx) && (Math.abs(dy) > 6 || Math.abs(dx) > 6)) {
+        swipe = null; screensWrapper.style.transition = ''; return;
+      }
+      if (Math.abs(dx) < 5) return; // wait for clear horizontal intent
+      swipe.ok = true;
+      try { screensWrapper.setPointerCapture(e.pointerId); } catch (_) {}
+    }
+    e.preventDefault(); // block browser back-swipe and scroll
+    screensWrapper.style.transform =
+      `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
+  }
+}, { passive: false }); // must be non-passive to call preventDefault
 
 document.addEventListener('pointerup', e => {
   if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
-  if (tapInfo) {
-    openDialog(tapInfo.appId);
-    tapInfo = null;
-    return;
+  if (tapInfo) { openDialog(tapInfo.appId); tapInfo = null; return; }
+  if (drag) { commitDrop(e.clientX, e.clientY); return; }
+  if (swipe && e.pointerId === swipe.id) {
+    screensWrapper.style.transition = '';
+    const dx = e.clientX - swipe.x, wasOk = swipe.ok;
+    swipe = null;
+    if (wasOk && Math.abs(dx) > 50) goTo(dx < 0 ? currentScreen + 1 : currentScreen - 1);
+    else goTo(currentScreen);
   }
-  if (drag) commitDrop(e.clientX, e.clientY);
 });
 
 document.addEventListener('pointercancel', () => {
@@ -344,6 +363,7 @@ document.addEventListener('pointercancel', () => {
   if (drag) { drag.el.classList.remove('dragging'); drag = null; }
   ghostEl.classList.remove('active');
   clearHighlight();
+  if (swipe) { swipe = null; screensWrapper.style.transition = ''; goTo(currentScreen); }
 });
 
 // ── Dialog ───────────────────────────────────────────────────────────────────
@@ -372,35 +392,14 @@ function goTo(idx) {
   pageDots.forEach((d, i) => d.classList.toggle('active', i === currentScreen));
 }
 
-let swipeX = 0, swipeY = 0, swiping = false, swipeCommitted = false;
+// swipe state: null | { id, x, y, ok }
+let swipe = null;
 
+// Only pointerdown lives on screensWrapper — move/up are on document
 screensWrapper.addEventListener('pointerdown', e => {
-  if (e.target.closest('.app-icon')) return;
-  swipeX = e.clientX; swipeY = e.clientY;
-  swiping = true; swipeCommitted = false;
+  if (e.target.closest('.app-icon') || drag || swipe) return;
+  swipe = { id: e.pointerId, x: e.clientX, y: e.clientY, ok: false };
   screensWrapper.style.transition = 'none';
-}, { passive: true });
-
-screensWrapper.addEventListener('pointermove', e => {
-  if (!swiping || drag) return;
-  const dx = e.clientX - swipeX, dy = e.clientY - swipeY;
-  if (!swipeCommitted) {
-    if (Math.abs(dx) < Math.abs(dy)) { swiping = false; return; }
-    swipeCommitted = true;
-  }
-  screensWrapper.style.transform =
-    `translateX(calc(-${currentScreen * 100}% + ${dx}px))`;
-}, { passive: true });
-
-screensWrapper.addEventListener('pointerup', e => {
-  if (!swiping) return;
-  swiping = false;
-  screensWrapper.style.transition = '';
-  if (!swipeCommitted) return;
-  const dx = e.clientX - swipeX;
-  if (dx < -50) goTo(currentScreen + 1);
-  else if (dx > 50) goTo(currentScreen - 1);
-  else goTo(currentScreen);
 }, { passive: true });
 
 // ── Clock ────────────────────────────────────────────────────────────────────

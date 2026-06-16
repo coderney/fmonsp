@@ -23,6 +23,9 @@ body {
   background: radial-gradient(ellipse at top, #1e3a5f 0%, #0d1b2e 60%, #000 100%);
   position: relative;
   overflow: hidden;
+  /* Respect iOS safe areas (notch / Dynamic Island) */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 /* ── Status Bar ── */
@@ -35,6 +38,17 @@ body {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
+}
+
+/*
+  In standalone/PWA mode the native iOS status bar overlays the top
+  (black-translucent). The safe-area-inset-top on .phone-screen already
+  pushes content below it. Hide our duplicate clock/icons so only the
+  native bar is visible.
+*/
+@media (display-mode: standalone) {
+  .status-bar { height: 8px; padding: 0; }
+  .status-time, .status-icons { display: none; }
 }
 
 .status-time {
